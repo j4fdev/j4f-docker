@@ -64,11 +64,12 @@ RUN if [ -z "$REPO_URL" ]; then \
       cp -r /home/builder/src/* /home/builder/app/ 2>/dev/null || true; \
     fi
 
-# 6. Compilar la aplicación Flutter Web en el subdirectorio indicado en una sola capa
+# 6. Compilar la aplicación Flutter Web en el subdirectorio indicado en una sola capa y limpiar .pub-cache
 WORKDIR /home/builder/app/${APP_DIR}
 
 RUN flutter pub get && \
-    flutter build web --release
+    flutter build web --release && \
+    rm -rf /home/builder/.pub-cache
 
 # =========================================================================
 # Stage 2: Runtime Nginx SPA con Inyección Dinámica de Variables de Entorno
