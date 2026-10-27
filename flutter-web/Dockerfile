@@ -43,9 +43,9 @@ RUN mkdir -p /home/builder/libraries && \
       git clone --depth 1 https://github.com/j4fdev/j4f-billing.git /home/builder/libraries/j4f-billing; \
     fi
 
-# 4. Asegurar que los directorios pertenezcan al usuario builder (evita Permission denied en .dart_tool)
+# 4. Asegurar permisos para el usuario builder
 USER root
-RUN mkdir -p /home/builder/app/${APP_DIR} && \
+RUN mkdir -p /home/builder/app && \
     chown -R builder:builder /home/builder/app /home/builder/libraries
 USER builder
 
@@ -61,11 +61,10 @@ RUN if [ -n "$REPO_URL" ]; then \
 # CASO B: Contexto local (ej. FitPlan donde el código ya está en el workspace)
 COPY --chown=builder:builder . /home/builder/src/
 RUN if [ -z "$REPO_URL" ]; then \
-      mkdir -p /home/builder/app && \
       cp -r /home/builder/src/* /home/builder/app/ 2>/dev/null || true; \
     fi
 
-# 6. Compilar la aplicación Flutter Web en el subdirectorio indicado
+# 6. Compilar la aplicación Flutter Web en el subdirectorio indicado en una sola capa
 WORKDIR /home/builder/app/${APP_DIR}
 
 RUN flutter pub get && \
