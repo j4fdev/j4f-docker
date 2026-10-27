@@ -43,7 +43,13 @@ RUN mkdir -p /home/builder/libraries && \
       git clone --depth 1 https://github.com/j4fdev/j4f-billing.git /home/builder/libraries/j4f-billing; \
     fi
 
-# 4. Obtención del código fuente:
+# 4. Asegurar que los directorios pertenezcan al usuario builder (evita Permission denied en .dart_tool)
+USER root
+RUN mkdir -p /home/builder/app/${APP_DIR} && \
+    chown -R builder:builder /home/builder/app /home/builder/libraries
+USER builder
+
+# 5. Obtención del código fuente:
 # CASO A: Repositorio remoto vía Git (ej. GrowPOS donde el código está en DanielZR30/pos_disco_app)
 RUN if [ -n "$REPO_URL" ]; then \
       echo "CacheBust: $CACHEBUST" && \
@@ -59,7 +65,7 @@ RUN if [ -z "$REPO_URL" ]; then \
       cp -r /home/builder/src/* /home/builder/app/ 2>/dev/null || true; \
     fi
 
-# 5. Compilar la aplicación Flutter Web en el subdirectorio indicado
+# 6. Compilar la aplicación Flutter Web en el subdirectorio indicado
 WORKDIR /home/builder/app/${APP_DIR}
 
 RUN flutter pub get && \
@@ -70,16 +76,10 @@ RUN flutter pub get && \
 # =========================================================================
 FROM nginx:alpine
 
-# Argumento para saber de qué carpeta copiar
 ARG APP_DIR=.
 
-# Copiar archivos compilados de Flutter Web
 COPY --from=builder /home/builder/app/${APP_DIR}/build/web /usr/share/nginx/html
-
-# Copiar configuración Nginx SPA
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copiar script de inyección en Runtime
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
