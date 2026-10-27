@@ -6,6 +6,7 @@ LABEL org.opencontainers.image.title="J4F Flutter Builder" \
       org.opencontainers.image.vendor="J4F"
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV GIT_TERMINAL_PROMPT=0
 ENV FLUTTER_HOME=/opt/flutter
 ENV PATH="${FLUTTER_HOME}/bin:${FLUTTER_HOME}/bin/cache/dart-sdk/bin:${PATH}"
 
@@ -33,6 +34,6 @@ RUN useradd -m -u 1000 -s /bin/bash builder && \
     chown -R builder:builder ${FLUTTER_HOME}
 
 USER builder
-WORKDIR /app
+WORKDIR /home/builder
 
 CMD ["flutter", "--version"]
