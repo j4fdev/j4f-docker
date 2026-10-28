@@ -1,5 +1,6 @@
+# syntax=docker/dockerfile:1
 # =========================================================================
-# J4F Universal Flutter Web Dockerfile
+# J4F Universal Flutter Web Dockerfile (BuildKit tmpfs)
 # Compila cualquier aplicación Flutter Web de J4F (Monorepo o Repositorio Remoto)
 # =========================================================================
 FROM ghcr.io/j4fdev/flutter-builder:stable AS builder
@@ -64,12 +65,13 @@ RUN if [ -z "$REPO_URL" ]; then \
       cp -r /home/builder/src/* /home/builder/app/ 2>/dev/null || true; \
     fi
 
-# 6. Compilar la aplicación Flutter Web en el subdirectorio indicado en una sola capa y limpiar .pub-cache
+# 6. BuildKit: Montaje en memoria RAM (tmpfs) para la caché de dependencias
 WORKDIR /home/builder/app/${APP_DIR}
 
-RUN flutter pub get && \
-    flutter build web --release && \
-    rm -rf /home/builder/.pub-cache
+RUN --mount=type=tmpfs,target=/home/builder/.pub-cache \
+    --mount=type=tmpfs,target=/tmp \
+    flutter pub get && \
+    flutter build web --release
 
 # =========================================================================
 # Stage 2: Runtime Nginx SPA con Inyección Dinámica de Variables de Entorno
